@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "build": "tsc --project ."
   },
   "keywords": [],
@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/express": "^4.17.14",
+    "@types/jest": "^29.2.3",
     "@types/shelljs": "^0.8.11",
     "express": "^4.18.2",
     "mongoose": "^6.7.5",
@@ -20,6 +21,8 @@
     "typescript": "^4.9.3"
   },
   "devDependencies": {
+    "jest": "^29.3.1",
+    "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1"
   }
 }

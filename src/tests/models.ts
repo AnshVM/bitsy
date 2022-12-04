@@ -7,6 +7,8 @@ init(
         name:"somename",
         schema:{
             name:String,
+            email:String,
+            dor:Date
         }
     }
 ])

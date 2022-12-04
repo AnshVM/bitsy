@@ -1,37 +1,49 @@
-import mongoose from 'mongoose';
+import mongoose,{Schema} from 'mongoose';
 import * as shell from 'shelljs';
 import * as fs from 'fs';
 import { typeConstructorMap } from './schemaTypes';
 
 
 export type schemaType = {
-    [key:string]:Function
+    [key: string]: Function
 }
 export type stringySchemaType = {
-    [key:string]:string
+    [key: string]: string
 }
 
-const modelCreateCode = (modelName:string,schema:stringySchemaType):string => {
+const modelCreateCode = (modelName: string, stringifiedSchema: string): string => {
     return `
-import {Schema} from 'mongoose';
-export const ${modelName}Schema = new Schema(${JSON.stringify(schema).split('"').join('')}); 
+import {model,Schema} from 'mongoose';
+const ${modelName}Schema = new Schema(${stringifiedSchema}); 
+export default model("${modelName}",${modelName}Schema);
     `
 }
 
-const createModels = (models:{name:string,schema:schemaType}[]) => {
+const stringifySchema = (model: { name: string, schema: schemaType }) => {
+    let transformedSchema: stringySchemaType = {};
+    Object.keys(model.schema).forEach((k) => {
+        const typeConstructor = typeConstructorMap.get(model.schema[k]);
+        if (typeConstructor) {
+            transformedSchema[k] = typeConstructor;
+        } else {
+            throw new Error("Invalid type")
+        }
+    })
+    return JSON.stringify(transformedSchema,null,4).replace(/"/g, '');
+}
+
+export const fileContent = (model: { name: string, schema: schemaType }) => {
+    const stringifiedSchema = stringifySchema(model);
+    const content = modelCreateCode(model.name, stringifiedSchema);
+    return content;
+}
+
+const createModels = (models: { name: string, schema: schemaType }[]) => {
     models.forEach((m) => {
-        let transformedSchema:stringySchemaType = {};
-        Object.keys(m.schema).forEach((k)=>{
-            const typeConstructor = typeConstructorMap.get(m.schema[k]);
-            if(typeConstructor){
-                transformedSchema[k] = typeConstructor;
-            }else{
-                throw new Error("Invalid type")
-            }
-        })
         const file = `${m.name}.ts`;
         shell.touch(file);
-        fs.writeFileSync(file,modelCreateCode(m.name,transformedSchema));
+        const content = fileContent(m);
+        fs.writeFileSync(file, content);
     })
 }
 
